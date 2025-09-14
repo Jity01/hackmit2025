@@ -10,12 +10,12 @@ class DataSource:
         pass
 
     @abstractmethod
-    def load_all_files(self):
+    def get_file(self):
         pass
 
-    @abstractmethod
-    def load_file(self, name):
-        pass
+    # @abstractmethod
+    # def load_file(self, name):
+    #     pass
 
 
         

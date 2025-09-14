@@ -26,17 +26,42 @@ class CloudStorage:
         type = mimetypes.guess_type(file_path)
         return open(file_path, "rb"), type
 
-    def upload_file(self, file_stream, destination_path, mime_type):
+    def create_folder(self, path):
+        """
+        Given a well-formed path, creates a folder in GCS.
+        Does not overwrite existing directory if path already exists.
+        """
+        path = path.rstrip('/') + '/'
+        try:
+            # Create an empty blob to represent the folder
+            blob = self.bucket.blob(path)
+            if not blob.exists():
+                blob.upload_from_string('', content_type='application/x-directory')
+            return True
+        except Exception as e:
+            print(f"Error creating folder: {e}")
+            return False
+        
+    def upload_file(self, file_dict):
         """
         Uploads a file to GCS.
 
         Args:
-            file_stream: File
+            file_dict: a dictionary containing (filestream, name, mimeType, full_path, folder_path)
             destination_path: Path in the bucket (e.g., "user_123/report.pdf")
         """
-        blob = self.bucket.blob(destination_path)
-        blob.upload_from_file(file_stream, content_type=mime_type)
+        folder_blob = self.bucket.blob(file_dict['folder_path'])
+        if not folder_blob:
+            self.create_folder()
+        blob = self.bucket.blob(file_dict['full_path'])
+        stream, mime_type = file_dict['stream'], file_dict['mimeType']
+        blob.upload_from_file(stream, content_type=mime_type)
         return True
+    
+    def migrate_files(self, file_dicts_with_paths):
+        for file in file_dicts_with_paths:
+            self.upload_file(file)
+
 
     def download_file(self, file_path, file_name):
         """
@@ -50,6 +75,9 @@ class CloudStorage:
     def list_files_in_directory(self, current_path):
         """
         List only files and folders directly under the current_path.
+
+        Returns a dictionary of list of files and folder names.
+        Sample output {"files":['hello.pdf'], "folders": ['/user', '/public']}
         """
         blobs = self.client.list_blobs(
             self.bucket,
@@ -73,11 +101,6 @@ class CloudStorage:
         blob = self.bucket.blob(file_path)
         blob.delete()
         return True
-
-    def exists(self, file_path):
-        """Checks if a file exists in GCS."""
-        blob = self.bucket.blob(file_path)
-        return blob.exists()
     
     def copy_file(self, source_path, destination_path):
         source_blob = self.bucket.blob(source_path)

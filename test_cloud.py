@@ -30,6 +30,15 @@ def test_gcs_file_search():
     files = drive.search_file('esg')
     print(files)
 
+def test_gcs_all_files_with_paths():
+    files = drive.get_all_files_with_paths()
+    print([(info['name'], info['mimeType'], info['full_path'], info['folder_path']) for info in files])
+    
+
 if __name__ == "__main__":
-    test_gcs_file_search()
+    # test_gcs_file_search()
+    try:
+        test_gcs_all_files_with_paths()
+    except KeyboardInterrupt:
+        exit()
 

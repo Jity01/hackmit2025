@@ -16,7 +16,6 @@ class GoogleDrive(DataSource):
             "application/vnd.google-apps.presentation": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
         }
         
-
     # def _check_authentication(self):
     #     if self.drive_service is None:
     #         print("Please connect to the Google Drive first.")
@@ -37,7 +36,7 @@ class GoogleDrive(DataSource):
         drive_service = build('drive', 'v3', credentials=creds)
         return drive_service
     
-    def load_all_files(self):
+    def get_all_files(self):
         """
         Loads all files from the user's google drive.
         Returns a list of dictionaries containing id, name, and file type.
@@ -53,6 +52,8 @@ class GoogleDrive(DataSource):
                 fields="nextPageToken, files(id, name, mimeType)",
                 pageToken=page_token
             ).execute()
+
+            
             
             all_files.extend(response.get('files', []))
             page_token = response.get('nextPageToken')
@@ -62,7 +63,7 @@ class GoogleDrive(DataSource):
         
         return all_files
     
-    def search_file(self, name, page_size=1):
+    def get_files(self, name, page_size=1):
         """
         Searches for a file with specified name and type in the user's google drive.
         Returns a list of dictionaries containing id, name, and file type.
@@ -78,15 +79,14 @@ class GoogleDrive(DataSource):
             pageSize=page_size,
             fields="files(id, name, mimeType)").execute()
 
-        items = results.get('files', [])
-        return items
+        files = results.get('files', [])
+        return files
         
-    def load_file(self, file):
+    def _load_file(self, file):
         """
         Loads a file from the user's google drive.
-        Returns a dictionary with file stream, name and type.
+        Mutates the file dictionary by adding a filestream key.
         """
-
         id, name = file['id'], file['name']
         type = file['mimeType']
         if type in self._native_types:
@@ -102,15 +102,53 @@ class GoogleDrive(DataSource):
         done = False
         while not done:
             status, done = downloader.next_chunk()
-            print(f"Download {int(status.progress() * 100)}%")
 
         fh.seek(0)
-        return {"file": fh, "name": name, "type": type}
+        file['stream'] = fh
 
 
+    def get_all_files_with_paths(self, root_folder_id='root'):
+        """
+        Returns all files with their paths. 
+        Sample output: [{id, name, mimeType, full_path, folder_path}, ...]
+        """
+
+        all_files_with_paths = []
+        
+
+        folder_queue = [(root_folder_id, "")]
+        
+        while folder_queue:
+            current_folder_id, current_path = folder_queue.pop(0)
+            
+            response = self.drive_service.files().list(
+                q=f"'{current_folder_id}' in parents and trashed=false", # grab all files with current directory as parent
+                pageSize=100,
+                fields="files(id, name, mimeType)"
+            ).execute()
+            
+            items = response.get('files', [])
+            
+            # Process each item in this folder
+            for item in items:
+                item_name = item['name']
+                item_full_path = f"{current_path}/{item_name}" if current_path else f"/{item_name}"
+                
+                if item['mimeType'] == 'application/vnd.google-apps.folder':
+                    # It's a folder - add to queue for later processing
+                    print(f"Found subfolder: {item_name}")
+                    folder_queue.append((item['id'], item_full_path))
+                else:
+                    # It's a file - add to results
+                    print(f"Found file: {item_name}")
+                    file_with_path = {
+                        **item,
+                        'full_path': item_full_path,
+                        'folder_path': current_path if current_path else "/",
+                    }
+                    self._load_file(file_with_path)
+                    all_files_with_paths.append(file_with_path)
+        
+        return all_files_with_paths
     
-
-
-
-
 
