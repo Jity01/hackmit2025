@@ -5,8 +5,7 @@ from io import BytesIO
 import mimetypes
 
 class CloudStorage:
-    def __init__(self, name):
-        self.name = name
+    def __init__(self):
         self.authenticate()
 
     def authenticate(self):

@@ -5,7 +5,8 @@ from backend.services.drive import GoogleDrive
 from backend.storage.cloud import CloudStorage
 
 app = Flask(__name__)
-
+drive = GoogleDrive()
+cloud = CloudStorage()
 
 @app.get("/status")
 def get_status():
@@ -54,11 +55,30 @@ def record():
 
 @app.post("/authenticate_drive")
 def authenticate_drive():
+    try:
+        drive.authenticate()
+        return jsonify({"authenticated": True}), 200
+    except Exception as e:
+        return jsonify(error=f"unexpected: {e.__class__.__name__}: {e}"), 500
+
+@app.post("/migrate")
+def migrate():
+    """migrates all google drive files into cloud storage"""
+    filestream_dicts = drive.get_all_files_with_paths()
+    cloud.migrate_files(filestream_dicts)
     return jsonify(ok=False, error="not implemented"), 501
 
-@app.post("/upload")
-def upload():
-    return jsonify(ok=False, error="not implemented"), 501
+@app.post('/vault/directory')
+def get_pwd():
+    """
+    Return folders and files in the present working directory
+    """
+    try:
+        file_folder_dict = cloud.list_files_in_directory()
+        return jsonify(file_folder_dict), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 if __name__ == "__main__":
     import os
