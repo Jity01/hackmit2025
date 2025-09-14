@@ -5,12 +5,14 @@ type Props = {
   title: string
   description: string
   Icon: ComponentType<{ className?: string }>
-  variant?: 'connect' | 'manage'   // button label + style
-  connected?: boolean              // small check badge on icon
+  variant?: 'connect' | 'manage'
+  connected?: boolean
+  onAction?: () => void             // <-- add this
+  actionLabel?: string              // <-- optional custom label
 }
 
 export default function IntegrationCard({
-  title, description, Icon, variant = 'connect', connected = false,
+  title, description, Icon, variant='connect', connected=false, onAction, actionLabel
 }: Props) {
   return (
     <div className="app-card p-5 flex flex-col gap-4">
@@ -22,21 +24,20 @@ export default function IntegrationCard({
           </div>
         )}
       </div>
-
       <div className="flex-1">
         <div className="text-[#1f2a1f]">{title}</div>
         <div className="text-sm text-black/50">{description}</div>
       </div>
-
       <div>
         <button
+          onClick={onAction}
           className={
             variant === 'manage'
               ? 'px-3 py-2 rounded-xl bg-black/5 hover:bg-black/10 text-[#1f2a1f]'
               : 'px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white'
           }
         >
-          {variant}
+          {actionLabel ?? variant}
         </button>
       </div>
     </div>
