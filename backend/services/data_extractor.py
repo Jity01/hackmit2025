@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 from typing import Dict, List
-from canvas_client import CanvasClient
+from services.canvas_client import CanvasClient
 
 class CanvasDataExtractor:
     def __init__(self, canvas_client: CanvasClient):
