@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from services.get_context import build_context
 from flask import Flask, Response, stream_with_context, jsonify, request
 from services.drive import GoogleDrive
 from storage.cloud import CloudStorage
@@ -150,6 +151,20 @@ def vault_preview():
         return resp
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
+
+@app.post("/context/build")
+def context_build():
+    """
+    summarize all pdfs under an optional prefix (e.g. 'course_data/').
+    returns one big string.
+    """
+    data = request.get_json(force=True, silent=True) or {}
+    prefix = (data.get("prefix") or "").strip()
+    try:
+        result = build_context(prefix=prefix)
+        return jsonify(ok=True, context=result), 200
+    except Exception as e:
+        return jsonify(ok=False, error=f"{e.__class__.__name__}: {e}"), 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "5055"))
