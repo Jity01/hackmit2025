@@ -1,0 +1,16 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-[#fbfcfb] text-[#1f2a1f];
+}
+
+.app-card {
+  @apply rounded-2xl bg-white shadow-soft border border-black/5;
+}
