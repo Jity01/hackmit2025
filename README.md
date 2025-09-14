@@ -8,4 +8,5 @@ How to start it:
 
 - run `npm i`
 - run `npx tsc -p electron/tsconfig.json`
-- run `npm run dev`
+- in one terminal window, run the server with `python backend/server.py`
+- in another, run the frontend with `npm run dev` (after cd-ing into frontend)
