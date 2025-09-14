@@ -7,6 +7,7 @@ from backend.recorder import record_seconds, status
 
 app = Flask(__name__)
 
+
 @app.get("/status")
 def get_status():
     return jsonify(status())
@@ -42,6 +43,16 @@ def record():
         return jsonify(error=str(e)), 500
     except Exception as e:
         return jsonify(error=f"unexpected: {e.__class__.__name__}: {e}"), 500
+
+@app.post("/authenticate_drive")
+def authenticate_drive():
+    pass
+@app.post("/upload")
+def upload():
+
+
+
+
 
 if __name__ == "__main__":
     import os

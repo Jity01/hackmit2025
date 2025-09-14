@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-from app.services.source import DataSource
+from backend.services.source import DataSource
 from io import BytesIO
 from googleapiclient.http import MediaIoBaseDownload
 
@@ -15,14 +15,19 @@ class GoogleDrive(DataSource):
             "application/vnd.google-apps.spreadsheet": "text/csv",
             "application/vnd.google-apps.presentation": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
         }
+        
 
+    # def _check_authentication(self):
+    #     if self.drive_service is None:
+    #         print("Please connect to the Google Drive first.")
+    #     return True
+    
     def authenticate(self):
         """
         Uses OAuth to connect to user's google drive.
         Returns the drive connection.
         """
         load_dotenv()
-        
         GOOGLE_DRIVE_CREDENTIALS = os.getenv("GOOGLE_DRIVE_CREDENTIALS")
         SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
         flow = InstalledAppFlow.from_client_secrets_file(
@@ -35,12 +40,10 @@ class GoogleDrive(DataSource):
     def load_all_files(self):
         """
         Loads all files from the user's google drive.
-        Returns a list of files containing id, name, and file type.
+        Returns a list of dictionaries containing id, name, and file type.
+
+        Sample output: [{'id': '483290', 'name': 'hello', 'mimeType': 'application/pdf'}]
         """
-        if self.drive_service is None:
-            pass
-            return
-        
         all_files = []
         page_token = None
 
@@ -56,19 +59,23 @@ class GoogleDrive(DataSource):
             
             if not page_token:
                 break
+        
         return all_files
     
-    def search_file(self, name, type=None):
+    def search_file(self, name, page_size=1):
         """
         Searches for a file with specified name and type in the user's google drive.
-        Returns a list of files containing id, name, and file type.
+        Returns a list of dictionaries containing id, name, and file type.
+
+        Sample output: [{'id': '483290', 'name': 'hello', 'mimeType': 'application/pdf'}]
         """
+
         if self.drive_service is None:
-            pass
+            print("Please connect to the Google Drive first.")
             return
         results = self.drive_service.files().list(
             q=f"name contains '{name}'",        
-            pageSize=1,
+            pageSize=page_size,
             fields="files(id, name, mimeType)").execute()
 
         items = results.get('files', [])
@@ -79,6 +86,7 @@ class GoogleDrive(DataSource):
         Loads a file from the user's google drive.
         Returns a dictionary with file stream, name and type.
         """
+
         id, name = file['id'], file['name']
         type = file['mimeType']
         if type in self._native_types:
