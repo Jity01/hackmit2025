@@ -11,3 +11,5 @@ google-cloud-aiplatform
 requests
 pyobjc
 flask
+firebase_admin
+openai

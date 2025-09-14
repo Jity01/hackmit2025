@@ -86,7 +86,7 @@ def extract_and_upload(base_url: str, access_token: str, *, bucket: str = "kb", 
     client = CanvasClient(base_url, (access_token or "").strip())
     manifest = CanvasDataExtractor(client).extract_all_data()
 
-    cs = CloudStorage(bucket)
+    cs = CloudStorage()
     uploaded: List[str] = []
     seen: set[str] = set()
 
@@ -99,9 +99,9 @@ def extract_and_upload(base_url: str, access_token: str, *, bucket: str = "kb", 
         try:
             tmp = _download_pdf(client.session, url)
             # keep flat under course_data/, prefix filenames with course id to avoid collisions
-            dest = f"{prefix.rstrip('/')}/{cid}_{name}"
+            dest = f"{prefix.rstrip('/') + '/'}/{cid}_{name}"
             with open(tmp, "rb") as fh:
-                file_dict = {'stream': fh, 'full_path': dest, 'folder_path': f"{prefix.rstrip('/')}/",  'name': f"{cid}_{name}", 'mimeType': "application/pdf"}
+                file_dict = {'stream': fh, 'full_path': dest, 'folder_path': f"{prefix.rstrip('/') + '/'}",  'name': f"{cid}_{name}", 'mimeType': "application/pdf"}
                 cs.upload_file(file_dict)
                 # cs.upload_file(fh, dest, "application/pdf")
             uploaded.append(dest)

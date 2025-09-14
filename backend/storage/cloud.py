@@ -41,13 +41,13 @@ class CloudStorage:
             print(f"Error creating folder: {e}")
             return False
 
-    def upload_file(self, file_dict, user_prefix="user_files"):
+    def upload_file(self, file_dict, user_prefix=""):
         """
         Uploads a file to GCS with a user-specific directory prefix.
 
         Args:
             file_dict: a dictionary containing (stream, name, mimeType, full_path, folder_path)
-            user_prefix: Directory prefix for user files (default: "user_files")
+            user_prefix: Directory prefix for user files (default: "" to root)
         """
         # Create the user-prefixed path
         original_path = file_dict['full_path'].lstrip('/')  # Remove leading slash if present

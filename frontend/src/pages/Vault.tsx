@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { listVault, previewUrl } from '../lib/api'
-import { Folder as FolderIcon, FileText, Film, X, ChevronRight, Home, Search, Grid3X3, List, Archive, Filter } from 'lucide-react'
+import { listVault, previewUrl, buildContext } from '../lib/api'
+import { Folder as FolderIcon, FileText, Film, X, ChevronRight, Home, Search, Grid3X3, List, Archive, Filter, Check } from 'lucide-react'
 import PdfPreview from '../components/PdfPreview'
 
 type Folder = { name: string; path: string; count: number }
@@ -36,6 +36,11 @@ export default function Vault() {
   const [viewer, setViewer] = useState<FileItem | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+
+  // New context functionality
+  const [ctxBusy, setCtxBusy] = useState(false)
+  const [ctxMsg, setCtxMsg] = useState<string | null>(null)
+  const [copiedToast, setCopiedToast] = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -76,6 +81,36 @@ export default function Vault() {
 
   const totalItems = filteredFolders.length + filteredFiles.length
 
+  // Context building functionality
+  async function handleGetContext() {
+    if (ctxBusy) return
+    setCtxBusy(true)
+    setCtxMsg('Building context...')
+
+    try {
+      // use current folder as scope; ensure trailing slash if non-empty
+      const prefix = path && !path.endsWith('/') ? path + '/' : path
+      const res = await buildContext(prefix)
+      const ok = await copyToClipboard(res.context || '')
+
+      if (ok) {
+        setCtxMsg(null) // hide the banner on success
+        setCopiedToast(true) // show toast
+        setTimeout(() => setCopiedToast(false), 3000)
+      } else {
+        setCtxMsg('Context built (copy failed)')
+      }
+    } catch (e: any) {
+      setCtxMsg(e?.message || 'Failed to build context')
+    } finally {
+      setCtxBusy(false)
+      // auto-clear banner
+      if (ctxMsg !== null) {
+        setTimeout(() => setCtxMsg(null), 3000)
+      }
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-900 text-white">
       {/* Background effects */}
@@ -94,10 +129,33 @@ export default function Vault() {
             </h1>
             <p className="text-xl text-gray-400">Your knowledge repository</p>
           </div>
-          <button className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-medium hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300">
-            Get Context
+          <button
+            onClick={handleGetContext}
+            disabled={ctxBusy}
+            className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-medium hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {ctxBusy ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                Building...
+              </>
+            ) : (
+              'Get Context'
+            )}
           </button>
         </div>
+
+        {/* Context Message Banner */}
+        {ctxMsg && (
+          <div className="rounded-2xl bg-blue-900/30 border border-blue-500/30 p-4 mb-8 backdrop-blur-md">
+            <div className="flex items-center gap-3 text-blue-300">
+              <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                <div className="w-4 h-4 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin"></div>
+              </div>
+              <span className="text-sm">{ctxMsg}</span>
+            </div>
+          </div>
+        )}
 
         {/* Navigation & Search */}
         <div className="rounded-3xl bg-slate-800/50 backdrop-blur-md border border-slate-700/50 p-6 mb-12">
@@ -177,8 +235,9 @@ export default function Vault() {
             </span>
           </div>
         </div>
-{/* Error State */}
-{err && (
+
+        {/* Error State */}
+        {err && (
           <div className="rounded-3xl bg-red-900/30 border border-red-500/30 p-6 mb-8 backdrop-blur-md">
             <div className="flex items-center gap-4 text-red-300">
               <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center">
@@ -384,6 +443,25 @@ export default function Vault() {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Success Toast */}
+        {copiedToast && (
+          <div className="fixed bottom-6 right-6 z-50">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-green-900/90 backdrop-blur-xl border border-green-500/30 text-green-300 shadow-lg">
+              <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
+                <Check className="w-5 h-5" />
+              </div>
+              <span className="text-sm font-medium">Context copied to clipboard!</span>
+              <button
+                onClick={() => setCopiedToast(false)}
+                className="p-1 rounded-lg hover:bg-green-500/20 transition-colors"
+                aria-label="dismiss"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
           </div>
         )}
