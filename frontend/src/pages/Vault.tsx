@@ -1,10 +1,31 @@
 import { useEffect, useMemo, useState } from 'react'
-import { listVault, previewUrl } from '../lib/api'
+import { listVault, previewUrl, buildContext } from '../lib/api'
 import { Folder as FolderIcon, FileText, Film, X, ChevronRight } from 'lucide-react'
 import PdfPreview from '../components/PdfPreview'
 
 type Folder = { name: string; path: string; count: number }
 type FileItem = { name: string; path: string }
+
+async function copyToClipboard(text: string) {
+  try {
+    await navigator.clipboard.writeText(text)
+    return true
+  } catch {
+    try {
+      const ta = document.createElement('textarea')
+      ta.value = text
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+      return true
+    } catch {
+      return false
+    }
+  }
+}
 
 export default function Vault() {
   const [path, setPath] = useState('')
@@ -13,6 +34,10 @@ export default function Vault() {
   const [loading, setLoading] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [viewer, setViewer] = useState<FileItem | null>(null)
+  const [copiedToast, setCopiedToast] = useState(false) // new
+
+  const [ctxBusy, setCtxBusy] = useState(false)
+  const [ctxMsg, setCtxMsg] = useState<string | null>(null)
 
   useEffect(() => {
     let alive = true
@@ -24,7 +49,7 @@ export default function Vault() {
     return () => { alive = false }
   }, [path])
 
-  // esc to close viewer
+  // esc closes viewer
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setViewer(null) }
     window.addEventListener('keydown', onKey)
@@ -35,17 +60,47 @@ export default function Vault() {
   const isPdf = (n: string) => n.toLowerCase().endsWith('.pdf')
   const isMp4 = (n: string) => n.toLowerCase().endsWith('.mp4')
 
+  async function handleGetContext() {
+    if (ctxBusy) return
+    setCtxBusy(true); setCtxMsg('building…')
+    try {
+      // use current folder as scope; ensure trailing slash if non-empty
+      const prefix = path && !path.endsWith('/') ? path + '/' : path
+      const res = await buildContext(prefix)
+      const ok = await copyToClipboard(res.context || '')
+      if (ok) {
+        setCtxMsg(null)              // hide the top banner on success
+        setCopiedToast(true)         // show toast
+        setTimeout(() => setCopiedToast(false), 2200)
+      } else {
+        setCtxMsg('built (copy failed)')
+      }
+    } catch (e: any) {
+      setCtxMsg(e?.message || 'failed to build')
+    } finally {
+      setCtxBusy(false)
+      // auto-clear banner
+      setTimeout(() => setCtxMsg(null), 2500)
+    }
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-xl text-[#1f2a1f]">vault</div>
-          <div className="text-sm text-black/50">your knowledge repository</div>
+          <div className="text-xl text-[#1f2a1f]">Vault</div>
+          <div className="text-sm text-black/50">Your knowledge repository</div>
         </div>
-        <button className="px-3 py-2 rounded-xl bg-brand-600 text-white hover:bg-brand-700 transition">
-          get context
+        <button
+          onClick={handleGetContext}
+          disabled={ctxBusy}
+          className="px-3 py-2 rounded-xl bg-brand-600 text-white hover:bg-brand-700 disabled:opacity-60 transition"
+        >
+          {ctxBusy ? 'building…' : 'get context'}
         </button>
       </div>
+
+      {ctxMsg && <div className="mt-2 text-sm text-black/70">context: {ctxMsg}</div>}
 
       <div className="mt-4 text-sm text-black/60 flex items-center gap-1">
         <button className="hover:underline" onClick={() => setPath('')}>root</button>
@@ -99,11 +154,11 @@ export default function Vault() {
       {viewer && (
         <div
           className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50"
-          onClick={() => setViewer(null)}           // click backdrop to close
+          onClick={() => setViewer(null)}
         >
           <div
             className="app-card w-full max-w-5xl h-[85vh] overflow-hidden flex flex-col"
-            onClick={(e) => e.stopPropagation()}     // don’t close when clicking inside
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-black/10">
               <div className="text-sm text-[#1f2a1f] truncate">{viewer.name}</div>
@@ -121,6 +176,24 @@ export default function Vault() {
                 <div className="p-6 text-sm">unsupported preview</div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+      {copiedToast && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+          <div
+            role="status"
+            aria-live="polite"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border border-[#1f7a1f]/40 bg-[#fffdf5] text-[#1f7a1f]"
+          >
+            <span className="text-sm">copied to clipboard!</span>
+            <button
+              onClick={() => setCopiedToast(false)}
+              className="p-1 rounded-lg hover:bg-black/5"
+              aria-label="dismiss"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
         </div>
       )}

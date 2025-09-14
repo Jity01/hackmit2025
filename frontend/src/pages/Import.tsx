@@ -83,8 +83,8 @@ export default function ImportPage() {
 
   return (
     <div>
-      <div className="text-xl text-[#1f2a1f]">import</div>
-      <div className="text-sm text-black/50 mb-6">connect new data sources</div>
+      <div className="text-xl text-[#1f2a1f]">Import</div>
+      <div className="text-sm text-black/50 mb-6">Connect new data sources</div>
 
       {/* status banners */}
       {driveMsg && <div className="mb-3 text-sm text-black/70">drive: {driveMsg}</div>}
