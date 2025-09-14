@@ -1,6 +1,7 @@
 /frontend/dist-electron
 /frontend/node_modules
 /frontend/package-lock.json
+/backend/service-account.json
 
 .env
 .venv/

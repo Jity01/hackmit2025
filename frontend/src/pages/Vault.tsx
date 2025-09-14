@@ -6,6 +6,27 @@ import PdfPreview from '../components/PdfPreview'
 type Folder = { name: string; path: string; count: number }
 type FileItem = { name: string; path: string }
 
+async function copyToClipboard(text: string) {
+  try {
+    await navigator.clipboard.writeText(text)
+    return true
+  } catch {
+    try {
+      const ta = document.createElement('textarea')
+      ta.value = text
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+      return true
+    } catch {
+      return false
+    }
+  }
+}
+
 export default function Vault() {
   const [path, setPath] = useState('')
   const [folders, setFolders] = useState<Folder[]>([])

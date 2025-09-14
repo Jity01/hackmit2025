@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StartUp Sign In</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0ede8;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .signin-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .title {
+            color: #d97440;
+            font-size: 32px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 32px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            color: #8b6914;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e5e5e5;
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: #f8f8f8;
+            color: #666;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #d97440;
+            background-color: white;
+            color: #333;
+        }
+
+        .signin-button {
+            width: 100%;
+            background-color: #d97440;
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-bottom: 24px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .signin-button:hover {
+            background-color: #c5632e;
+        }
+
+        .signin-button:active {
+            background-color: #b5572a;
+        }
+
+        .divider {
+            height: 1px;
+            background-color: #e5e5e5;
+            margin: 24px 0;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .toggle-label {
+            color: #000000;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            font-style: italic;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 52px;
+            height: 28px;
+            background-color: #d97440;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .toggle-switch.off {
+            background-color: #ccc;
+        }
+
+        .toggle-knob {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 24px;
+            height: 24px;
+            background-color: white;
+            border-radius: 12px;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-switch.off .toggle-knob {
+            transform: translateX(-24px);
+        }
+
+        /* Popup styles */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .popup-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 800px;
+            height: 80%;
+            max-height: 600px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .popup-header {
+            background-color: #d97440;
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .popup-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px;
+            line-height: 1;
+        }
+
+        .close-button:hover {
+            opacity: 0.8;
+        }
+
+        .popup-content {
+            width: 100%;
+            height: calc(100% - 64px);
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="signin-container">
+        <h1 class="title">StartUp Sign In</h1>
+        
+        <form>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Enter your username">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter your password">
+            </div>
+            
+            <button type="submit" class="signin-button">Sign In</button>
+        </form>
+        
+        <div class="divider"></div>
+        
+        <div class="toggle-container">
+            <span class="toggle-label">Share data using Basis</span>
+            <div class="toggle-switch" id="toggleSwitch">
+                <div class="toggle-knob"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup overlay -->
+    <div class="popup-overlay" id="popupOverlay">
+        <div class="popup-container">
+            <div class="popup-header">
+                <h2 class="popup-title">Connect Data with Knowledge Base</h2>
+                <button class="close-button" id="closeButton">&times;</button>
+            </div>
+            <iframe class="popup-content" id="popupFrame" src=""></iframe>
+        </div>
+    </div>
+
+    <script>
+        const toggleSwitch = document.getElementById('toggleSwitch');
+        const popupOverlay = document.getElementById('popupOverlay');
+        const popupFrame = document.getElementById('popupFrame');
+        const closeButton = document.getElementById('closeButton');
+        let isOn = true;
+
+        toggleSwitch.addEventListener('click', function() {
+            isOn = !isOn;
+            if (isOn) {
+                toggleSwitch.classList.remove('off');
+            } else {
+                toggleSwitch.classList.add('off');
+            }
+        });
+
+        // Handle form submission
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // Check if all conditions are met
+            if (username && password && isOn) {
+                // Replace 'your-other-file.html' with the path to your HTML file
+                const htmlFilePath = 'NBaseSignIn.html'; // Change this to your actual file path
+                
+                // Load the HTML file in the iframe
+                popupFrame.src = htmlFilePath;
+                
+                // Show the popup
+                popupOverlay.style.display = 'flex';
+            } else {
+                let message = '';
+                if (!username || !password) {
+                    message = 'Please fill in both username and password.';
+                } else if (!isOn) {
+                    //pop up empty dashboard
+                    popupFrame.src = 'dashboard.html';
+                    popupOverlay.style.display = 'flex';
+                    return;
+                }
+                alert(message);
+            }
+        });
+
+        // Close popup functionality
+        closeButton.addEventListener('click', function() {
+            popupOverlay.style.display = 'none';
+            popupFrame.src = ''; // Clear the iframe source
+        });
+
+        // Close popup when clicking outside the popup container
+        popupOverlay.addEventListener('click', function(e) {
+            if (e.target === popupOverlay) {
+                popupOverlay.style.display = 'none';
+                popupFrame.src = ''; // Clear the iframe source
+            }
+        });
+
+        // Alternative method: Open in a new window instead of popup
+        function openInNewWindow(htmlFilePath) {
+            const newWindow = window.open(
+                htmlFilePath,
+                'Dashboard',
+                'width=800,height=600,scrollbars=yes,resizable=yes,toolbar=no,menubar=no'
+            );
+            
+            if (newWindow) {
+                newWindow.focus();
+            } else {
+                alert('Please allow popups for this site to view the dashboard.');
+            }
+        }
+
+      
+    </script>
+</body>
+</html>

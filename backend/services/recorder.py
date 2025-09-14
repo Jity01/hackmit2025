@@ -33,12 +33,13 @@ def _avf_screen_device_for_ns_index(ns_idx: int) -> Optional[int]:
 
 # ---- upload via your working wrapper, then delete local ----
 def _upload_to_gcs(local_path: str, *, bucket: str, prefix: str) -> str:
-    cs = CloudStorage(bucket)
+    cs = CloudStorage()
     basename = os.path.basename(local_path)
     dest = f"{prefix.rstrip('/')}/{basename}"
     mime = mimetypes.guess_type(local_path)[0] or "video/mp4"
     with open(local_path, "rb") as f:
-        cs.upload_file(f, dest, mime)
+        file_dict = {'stream': f, 'name': basename, 'mimeType': mime, 'full_path': dest, 'folder_path': f"{prefix.rstrip('/')}/"}
+        cs.upload_file(file_dict)
     return dest
 
 def record_seconds(

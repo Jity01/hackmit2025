@@ -61,3 +61,28 @@ export async function listVault(path = '') {
 export function previewUrl(path: string) {
   return `/api/vault/preview?path=${encodeURIComponent(path)}`
 }
+
+export async function buildContext(prefix = '') {
+  const r = await fetch('/api/context/build', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ prefix }),
+  })
+  const j = await r.json().catch(() => ({}))
+  if (!r.ok || j.ok === false) throw new Error(j.error || `http ${r.status}`)
+  console.log(j.context)
+  return j as { ok: boolean; context: string }
+}
+
+export type Company = {
+  id: string;
+  name?: string;
+  description?: string;
+  permitted?: boolean;
+};
+
+export async function getCompanies(): Promise<Company[]> {
+  const res = await fetch(`api/companies`, { cache: "no-store" });
+  if (!res.ok) throw new Error("failed to fetch companies");
+  return res.json();
+}

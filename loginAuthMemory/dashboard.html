@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0ede8;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 40px;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .dashboard-title {
+            color: #d97440;
+            font-size: 32px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 32px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .data-section {
+            margin-top: 40px;
+            padding: 30px;
+            background-color: #faf9f6;
+            border-radius: 12px;
+        }
+
+        .section-title {
+            color: #8b6914;
+            font-size: 20px;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        #dataDisplay {
+            color: #666;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <h1 class="dashboard-title">Awesome Start Up that uses your data in ways that fit your needs!</h1>
+
+        <div class="data-section">
+            <h2 class="section-title">Your Data</h2>
+            <div id="dataDisplay">Here is the data we have from you:</div>
+        </div>
+    </div>
+
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script>
+        // Google Cloud setup
+        const GOOGLE_CLOUD_CONFIG = {
+            apiKey: 'YOUR_API_KEY_HERE',
+            projectId: 'YOUR_PROJECT_ID_HERE',
+        };
+
+        async function checkDatabaseAccess() {
+            try {
+                // Call backend API to check if StartUp has access in demo_table
+                const response = await fetch('http://localhost:5000/api/check-access', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ entity: 'StartUp' })
+                });
+
+                const result = await response.json();
+                return result.hasAccess;
+            } catch (error) {
+                console.error('Error checking database access:', error);
+                return false;
+            }
+        }
+
+        function initGoogleCloud() {
+            gapi.load('client', () => {
+                gapi.client.init({
+                    apiKey: GOOGLE_CLOUD_CONFIG.apiKey,
+                }).then(() => {
+                    loadData();
+                });
+            });
+        }
+
+        async function loadData() {
+            const dataDisplay = document.getElementById('dataDisplay');
+            dataDisplay.innerHTML = 'Checking access permissions...';
+
+            const hasAccess = await checkDatabaseAccess();
+
+            if (hasAccess) {
+                dataDisplay.innerHTML = 'Here is the data we have from you:<br><br>• User preferences: Custom dashboard layout<br>• Activity logs: Last login 2 hours ago<br>• Data insights: 15 new recommendations';
+            } else {
+                dataDisplay.innerHTML = 'Knowledge Base did not give data access';
+            }
+        }
+
+        // Initialize when page loads
+        window.onload = initGoogleCloud;
+    </script>
+</body>
+</html>
