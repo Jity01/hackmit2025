@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StartUp Sign In</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0ede8;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .signin-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .title {
+            color: #d97440;
+            font-size: 32px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 32px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            color: #8b6914;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e5e5e5;
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: #f8f8f8;
+            color: #666;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #d97440;
+            background-color: white;
+            color: #333;
+        }
+
+        .signin-button {
+            width: 100%;
+            background-color: #d97440;
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-bottom: 24px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .signin-button:hover {
+            background-color: #c5632e;
+        }
+
+        .signin-button:active {
+            background-color: #b5572a;
+        }
+
+        .divider {
+            height: 1px;
+            background-color: #e5e5e5;
+            margin: 24px 0;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .toggle-label {
+            color: #000000;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            font-style: italic;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 52px;
+            height: 28px;
+            background-color: #d97440;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .toggle-switch.off {
+            background-color: #ccc;
+        }
+
+        .toggle-knob {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 24px;
+            height: 24px;
+            background-color: white;
+            border-radius: 12px;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-switch.off .toggle-knob {
+            transform: translateX(-24px);
+        }
+    </style>
+</head>
+<body>
+    <div class="signin-container">
+        <h1 class="title">StartUp Sign In</h1>
+        
+        <form>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" placeholder="Enter your username">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter your password">
+            </div>
+            
+            <button type="submit" class="signin-button">Sign In</button>
+        </form>
+        
+        <div class="divider"></div>
+        
+        <div class="toggle-container">
+            <span class="toggle-label">Share data using Basis</span>
+            <div class="toggle-switch" id="toggleSwitch">
+                <div class="toggle-knob"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const toggleSwitch = document.getElementById('toggleSwitch');
+        let isOn = true;
+
+        toggleSwitch.addEventListener('click', function() {
+            isOn = !isOn;
+            if (isOn) {
+                toggleSwitch.classList.remove('off');
+            } else {
+                toggleSwitch.classList.add('off');
+            }
+        });
+
+        // Handle form submission
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username && password) {
+                alert('Sign in functionality would be implemented here!');
+            } else {
+                alert('Please fill in both username and password.');
+            }
+        });
+    </script>
+</body>
+</html>
