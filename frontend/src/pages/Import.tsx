@@ -189,7 +189,7 @@ export default function ImportPage() {
               type="number" min={1}
               value={seconds}
               onChange={(e) => setSeconds(Math.max(1, parseInt(e.target.value || '0')))}
-              className="mt-1 w-full px-3 py-2 rounded-xl border border-black/10 focus:outline-none focus:ring-2 focus:ring-brand-300"
+              className="mt-1 w-full px-3 py-2 rounded-xl border border-black/10 focus:outline-none focus:ring-2 focus:ring-brand-300 bg-white"
             />
 
             <div className="mt-4 flex justify-end gap-2">

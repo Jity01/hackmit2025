@@ -49,6 +49,7 @@ class CloudStorage:
             file_dict: a dictionary containing (filestream, name, mimeType, full_path, folder_path)
             destination_path: Path in the bucket (e.g., "user_123/report.pdf")
         """
+        
         folder_blob = self.bucket.blob(file_dict['folder_path'])
         if not folder_blob:
             self.create_folder()

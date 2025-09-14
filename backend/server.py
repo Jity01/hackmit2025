@@ -1,15 +1,25 @@
 #!/usr/bin/env python3
+from services.firebase import get_all_rows
 from services.get_context import build_context
 from flask import Flask, Response, stream_with_context, jsonify, request
 from services.drive import GoogleDrive
 from storage.cloud import CloudStorage
 from services.recorder import record_seconds, status
 from services.canvas_extract import extract_and_upload
+import firebase_admin
+from firebase_admin import credentials, firestore
 import os
 
 app = Flask(__name__)
 drive = GoogleDrive("")
 cloud = CloudStorage()
+
+if not firebase_admin._apps:
+    cred = credentials.Certificate(os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "service-account.json"))
+    firebase_admin.initialize_app(cred)
+
+db = firestore.client()
+COL = "companies"
 
 @app.get("/status")
 def get_status():
@@ -44,6 +54,7 @@ def record():
             preset=preset,
         )
         code = 200 if res.get("ok") else 500
+        print(res)
         return jsonify(res), code
 
     except ValueError as e:
@@ -165,6 +176,10 @@ def context_build():
         return jsonify(ok=True, context=result), 200
     except Exception as e:
         return jsonify(ok=False, error=f"{e.__class__.__name__}: {e}"), 500
+
+@app.get("/companies")
+def list_companies():
+    return jsonify(get_all_rows()), 200
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "5055"))

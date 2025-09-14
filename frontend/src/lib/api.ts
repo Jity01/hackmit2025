@@ -74,3 +74,15 @@ export async function buildContext(prefix = '') {
   return j as { ok: boolean; context: string }
 }
 
+export type Company = {
+  id: string;
+  name?: string;
+  description?: string;
+  permitted?: boolean;
+};
+
+export async function getCompanies(): Promise<Company[]> {
+  const res = await fetch(`api/companies`, { cache: "no-store" });
+  if (!res.ok) throw new Error("failed to fetch companies");
+  return res.json();
+}

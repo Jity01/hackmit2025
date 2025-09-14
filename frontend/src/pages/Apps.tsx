@@ -1,11 +1,9 @@
-
 import AppRow from '../components/AppRow'
 
 export default function Apps() {
   return (
     <div>
-      <div className="text-xl text-[#1f2a1f]">Users</div>
-      <div className="text-sm text-black/50 mb-6">Users of your data</div>
+      <div className="text-xl text-[#1f2a1f] mb-4">users of your data</div>
       <div className="space-y-4">
         <AppRow name="google drive" status="connected" description="cloud storage and file synchronization" />
         <AppRow name="notion" status="connected" description="workspace for notes and collaboration" />

@@ -101,7 +101,9 @@ def extract_and_upload(base_url: str, access_token: str, *, bucket: str = "kb", 
             # keep flat under course_data/, prefix filenames with course id to avoid collisions
             dest = f"{prefix.rstrip('/')}/{cid}_{name}"
             with open(tmp, "rb") as fh:
-                cs.upload_file(fh, dest, "application/pdf")
+                file_dict = {'stream': fh, 'full_path': dest, 'folder_path': f"{prefix.rstrip('/')}/",  'name': f"{cid}_{name}", 'mimeType': "application/pdf"}
+                cs.upload_file(file_dict)
+                # cs.upload_file(fh, dest, "application/pdf")
             uploaded.append(dest)
         except Exception:
             # skip failures; keep going
