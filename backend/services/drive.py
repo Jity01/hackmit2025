@@ -2,14 +2,14 @@ import os
 from dotenv import load_dotenv
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-from backend.services.source import DataSource
+from services.source import DataSource
 from io import BytesIO
 from googleapiclient.http import MediaIoBaseDownload
 
 class GoogleDrive(DataSource):
     def __init__(self, name):
         super().__init__(name)
-        self.drive_service = self.authenticate()
+        self.drive_service = None
         self._native_types = {
             "application/vnd.google-apps.document": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             "application/vnd.google-apps.spreadsheet": "text/csv",

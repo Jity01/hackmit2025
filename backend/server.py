@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 from flask import Flask, request, jsonify
-from backend.services.drive import GoogleDrive
-from backend.storage.cloud import CloudStorage
+from services.drive import GoogleDrive
+from storage.cloud import CloudStorage
 from services.recorder import record_seconds, status
 from services.canvas_extract import extract_and_upload
 import os
 
 app = Flask(__name__)
-drive = GoogleDrive()
+drive = GoogleDrive("")
 cloud = CloudStorage()
 
 @app.get("/status")
@@ -97,6 +97,34 @@ def get_pwd():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.post("/vault/list")
+def vault_list():
+    """
+    list immediate children under a prefix ('' = root).
+    returns folders with item counts and files.
+    """
+    try:
+        data = request.get_json(force=True, silent=True) or {}
+        path = (data.get("path") or "").lstrip("/")
+        if path and not path.endswith("/"):
+            path += "/"
+
+        listing = cloud.list_files_in_directory(path)  # {"files":[...], "folders":[...]}
+
+        # build folder objects with counts of direct children
+        folders = []
+        for raw in listing.get("folders", []):
+            name = raw.rstrip("/").split("/")[-1]
+            child_prefix = f"{path}{raw.rstrip('/')}/"
+            child_listing = cloud.list_files_in_directory(child_prefix)
+            count = len(child_listing.get("files", [])) + len(child_listing.get("folders", []))
+            folders.append({"name": name, "path": child_prefix, "count": count})
+
+        files = [{"name": f.split("/")[-1], "path": f"{path}{f}"} for f in listing.get("files", [])]
+
+        return jsonify({"ok": True, "path": path, "folders": folders, "files": files}), 200
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "5055"))

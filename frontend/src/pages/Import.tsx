@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef } from 'react'
 import IntegrationCard from '../components/IntegrationCard'
 import { Palette, Cloud, Video, Eye, EyeOff } from 'lucide-react'
-import { startRecording, extractCanvas } from '../lib/api'
+import { startRecording, extractCanvas, authenticateDrive, migrateDrive } from '../lib/api'
 
 type CanvasCreds = { baseUrl: string; accessToken: string }
 function normalizeUrl(u: string) {
@@ -17,6 +17,27 @@ export default function ImportPage() {
   const [seconds, setSeconds] = useState(5)
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
+  const [driveBusy, setDriveBusy] = useState(false)
+  const [driveMsg, setDriveMsg] = useState<string | null>(null)
+  const driveCtl = useRef<AbortController | null>(null)
+
+  async function handleDriveConnect() {
+    if (driveBusy) return
+    setDriveBusy(true); setDriveMsg('authenticating…')
+    const ctl = new AbortController(); driveCtl.current = ctl
+    try {
+      const a = await authenticateDrive({ signal: ctl.signal })
+      if (!a.authenticated) throw new Error('drive auth failed')
+      setDriveMsg('migrating files…')
+      const m = await migrateDrive({ signal: ctl.signal })
+      // adjust message based on your /migrate response shape
+      setDriveMsg(m.count != null ? `migrated ${m.count} files` : 'migration complete')
+    } catch (e: any) {
+      setDriveMsg(e?.message || 'drive connect failed')
+    } finally {
+      setDriveBusy(false); driveCtl.current = null
+    }
+  }
 
   async function handleStart() {
     setBusy(true); setMsg(null)
@@ -65,25 +86,34 @@ export default function ImportPage() {
       <div className="text-xl text-[#1f2a1f]">import</div>
       <div className="text-sm text-black/50 mb-6">connect new data sources</div>
 
+      {/* status banners */}
+      {driveMsg && <div className="mb-3 text-sm text-black/70">drive: {driveMsg}</div>}
       {canvasMsg && <div className="mb-3 text-sm text-black/70">{canvasMsg}</div>}
       {msg && <div className="mb-3 text-sm text-black/70">{msg}</div>}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {/* canvas card unchanged */}
         <IntegrationCard
           title="canvas"
           description="import course materials and assignments"
           Icon={Palette}
           variant="connect"
-          actionLabel="continue"
+          actionLabel="connect"
           onAction={() => setCanvasOpen(true)}
         />
+
+        {/* google drive card → hits authenticate + migrate */}
         <IntegrationCard
           title="google drive"
-          description="sync documents and files"
+          description={driveBusy ? 'working…' : 'sync documents and files'}
           Icon={Cloud}
-          variant="manage"
-          connected
+          variant="connect"
+          actionLabel={driveBusy ? 'working…' : 'connect'}
+          onAction={handleDriveConnect}
+          connected={false}
         />
+
+        {/* screen recording unchanged */}
         <IntegrationCard
           title="screen recording"
           description="capture and analyze recordings"

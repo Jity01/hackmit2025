@@ -71,7 +71,7 @@ class CloudStorage:
         return True
 
 
-    def list_files_in_directory(self, current_path):
+    def list_files_in_directory(self, current_path: str = ""):
         """
         List only files and folders directly under the current_path.
 
@@ -126,6 +126,32 @@ class CloudStorage:
         blob.download_to_file(fh)
         fh.seek(0)
         return fh, blob.content_type
+
+    def list_media(self, prefix: str = "", exts: tuple[str, ...] = ("pdf", "mp4")):
+        """
+        return a flat list of pdf/mp4 objects under `prefix` (recursive).
+        each item: {path, name, size, content_type, updated}
+        """
+        exts = tuple(e.lower().lstrip(".") for e in exts)
+        out = []
+        for blob in self.client.list_blobs(self.bucket, prefix=prefix or None):
+            if blob.name.endswith("/"):
+                continue
+            name = os.path.basename(blob.name)
+            ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+            if ext not in exts:
+                continue
+            out.append({
+                "path": blob.name,
+                "name": name,
+                "size": blob.size,
+                "content_type": (blob.content_type or ""),
+                "updated": (blob.updated.isoformat() if getattr(blob, "updated", None) else None),
+            })
+        # newest first
+        out.sort(key=lambda x: x["updated"] or "", reverse=True)
+        return out
+
 
 if __name__ == "__main__":
 
