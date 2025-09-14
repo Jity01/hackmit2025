@@ -57,3 +57,7 @@ export async function listVault(path = '') {
     files: { name: string; path: string }[]
   }
 }
+
+export function previewUrl(path: string) {
+  return `/api/vault/preview?path=${encodeURIComponent(path)}`
+}

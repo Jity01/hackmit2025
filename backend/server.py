@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from flask import Flask, request, jsonify
+from flask import Flask, Response, stream_with_context, jsonify, request
 from services.drive import GoogleDrive
 from storage.cloud import CloudStorage
 from services.recorder import record_seconds, status
@@ -123,6 +123,31 @@ def vault_list():
         files = [{"name": f.split("/")[-1], "path": f"{path}{f}"} for f in listing.get("files", [])]
 
         return jsonify({"ok": True, "path": path, "folders": folders, "files": files}), 200
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+@app.get("/vault/preview")
+def vault_preview():
+    path = (request.args.get("path") or "").lstrip("/")
+    if not path:
+        return jsonify({"ok": False, "error": "path is required"}), 400
+    try:
+        fh, mime, filename = cloud.open_stream(path)
+
+        def generate(chunk=1024 * 512):
+            with fh:
+                while True:
+                    data = fh.read(chunk)
+                    if not data:
+                        break
+                    yield data
+
+        resp = Response(stream_with_context(generate()), mimetype=mime)
+        resp.headers["Content-Disposition"] = f'inline; filename="{filename}"'  # <-- no download
+        resp.headers["Cache-Control"] = "no-store"
+        resp.headers["X-Content-Type-Options"] = "nosniff"
+        resp.headers["Accept-Ranges"] = "bytes"  # helps video seeking
+        return resp
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 

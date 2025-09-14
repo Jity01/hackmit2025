@@ -116,16 +116,21 @@ class CloudStorage:
         blob.make_public()
         return blob.public_url
 
-    def preview_file(self, file_path):
+    def open_stream(self, file_path: str):
         """
-        Saves the file to a io buffer for in-app preview.
-        Returns the file handle and mime type.
+        return (fh, mime, filename) where fh is a streaming, file-like object.
+        nothing is written to disk and we don't load full bytes into memory.
         """
         blob = self.bucket.blob(file_path)
-        fh = BytesIO()
-        blob.download_to_file(fh)
-        fh.seek(0)
-        return fh, blob.content_type
+        fh = blob.open("rb")                  # streaming handle
+        # fetch metadata for correct headers
+        try:
+            blob.reload()
+        except Exception:
+            pass
+        mime = blob.content_type or mimetypes.guess_type(file_path)[0] or "application/octet-stream"
+        filename = os.path.basename(file_path)
+        return fh, mime, filename
 
     def list_media(self, prefix: str = "", exts: tuple[str, ...] = ("pdf", "mp4")):
         """
