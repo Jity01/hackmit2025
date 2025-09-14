@@ -1,3 +1,8 @@
 /frontend/dist-electron
 /frontend/node_modules
 /frontend/package-lock.json
+
+.env
+.venv/
+/backend/auth/
+__pycache__/
