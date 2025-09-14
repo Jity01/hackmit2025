@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basis Access</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f3e8;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .nbase-container {
+            background:  #f5f3e8;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            border: 2px solid #2d5016;
+        }
+
+        .nbase-title {
+            color: #1a4d14;
+            font-size: 32px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 32px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .nbase-label {
+            display: block;
+            color: #2d5016;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .nbase-input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #4a7c59;
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: #f8fdf7;
+            color: #2d5016;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .nbase-input:focus {
+            outline: none;
+            border-color: #1a4d14;
+            background-color:  #f8fdf7;
+            color: #1a4d14;
+        }
+
+        .nbase-button {
+            width: 100%;
+            background-color: #1a4d14;
+            color:  #f5f3e8;
+            border: none;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-bottom: 24px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .nbase-button:hover {
+            background-color: #0f3a0c;
+        }
+
+        .nbase-button:active {
+            background-color: #0a2908;
+        }
+
+        /* Popup styles */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .popup-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            width: 95%;
+            max-width: 1800px;
+            height: 95%;
+            max-height: 95vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .popup-header {
+            background-color: #1a4d14;
+            color: #f5f3e8;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .popup-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            color: #f5f3e8;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px;
+            line-height: 1;
+        }
+
+        .close-button:hover {
+            opacity: 0.8;
+        }
+
+        .popup-content {
+            width: 100%;
+            height: calc(100% - 64px);
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="nbase-container">
+        <h1 class="nbase-title">Basis Access</h1>
+        
+        <form id="nbaseForm">
+            <div class="form-group">
+                <label for="nbaseId" class="nbase-label">NBase ID</label>
+                <input type="text" id="nbaseId" class="nbase-input" placeholder="Enter your NBase ID">
+            </div>
+            
+            <div class="form-group">
+                <label for="nbasePassword" class="nbase-label">Password</label>
+                <input type="password" id="nbasePassword" class="nbase-input" placeholder="Enter your password">
+            </div>
+            
+            <button type="submit" class="nbase-button">Access NBase</button>
+        </form>
+    </div>
+
+    <!-- Popup overlay -->
+    <div class="popup-overlay" id="popupOverlay">
+        <div class="popup-container">
+            <div class="popup-header">
+                <h2 class="popup-title">NBase Dashboard Access</h2>
+                <button class="close-button" id="closeButton">&times;</button>
+            </div>
+            <iframe class="popup-content" id="popupFrame" src=""></iframe>
+        </div>
+    </div>
+
+    <script>
+        const popupOverlay = document.getElementById('popupOverlay');
+        const popupFrame = document.getElementById('popupFrame');
+        const closeButton = document.getElementById('closeButton');
+
+        // Handle NBase form submission
+        document.getElementById('nbaseForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const nbaseId = document.getElementById('nbaseId').value.trim();
+            const nbasePassword = document.getElementById('nbasePassword').value.trim();
+
+            if (!nbaseId || !nbasePassword) {
+                alert('Please fill in both NBase ID and password.');
+                return;
+            }
+
+             // Check if all conditions are met
+            if (nbaseId && nbasePassword) {
+                // Grant access to StartUp in database
+                fetch('http://localhost:5000/api/grant-access', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ entity: 'StartUp' })
+                }).then(response => response.json())
+                  .then(data => {
+                      if (data.success) {
+                          console.log('StartUp access granted in database');
+                      }
+                  })
+                  .catch(error => {
+                      console.error('Error granting access:', error);
+                  });
+
+                // Open dashboard in new window
+                const newWindow = window.open('dashboard.html', '_blank');
+
+                // Check if popup was blocked
+                if (!newWindow || newWindow.closed || typeof newWindow.closed == 'undefined') {
+                    alert('Popup blocked! Please allow popups for this site and try again.');
+                } else {
+                    newWindow.focus();
+                }
+                return;
+            }
+        });
+
+        // Close popup functionality
+        closeButton.addEventListener('click', function() {
+            popupOverlay.style.display = 'none';
+            popupFrame.src = ''; // Clear the iframe source
+        });
+
+        // Close popup when clicking outside the popup container
+        popupOverlay.addEventListener('click', function(e) {
+            if (e.target === popupOverlay) {
+                popupOverlay.style.display = 'none';
+                popupFrame.src = ''; // Clear the iframe source
+            }
+        });
+    </script>
+</body>
+</html>

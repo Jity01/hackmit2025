@@ -147,6 +147,67 @@
         .toggle-switch.off .toggle-knob {
             transform: translateX(-24px);
         }
+
+        /* Popup styles */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .popup-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 800px;
+            height: 80%;
+            max-height: 600px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .popup-header {
+            background-color: #d97440;
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .popup-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px;
+            line-height: 1;
+        }
+
+        .close-button:hover {
+            opacity: 0.8;
+        }
+
+        .popup-content {
+            width: 100%;
+            height: calc(100% - 64px);
+            border: none;
+        }
     </style>
 </head>
 <body>
@@ -177,8 +238,22 @@
         </div>
     </div>
 
+    <!-- Popup overlay -->
+    <div class="popup-overlay" id="popupOverlay">
+        <div class="popup-container">
+            <div class="popup-header">
+                <h2 class="popup-title">Connect Data with Knowledge Base</h2>
+                <button class="close-button" id="closeButton">&times;</button>
+            </div>
+            <iframe class="popup-content" id="popupFrame" src=""></iframe>
+        </div>
+    </div>
+
     <script>
         const toggleSwitch = document.getElementById('toggleSwitch');
+        const popupOverlay = document.getElementById('popupOverlay');
+        const popupFrame = document.getElementById('popupFrame');
+        const closeButton = document.getElementById('closeButton');
         let isOn = true;
 
         toggleSwitch.addEventListener('click', function() {
@@ -196,12 +271,60 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
-            if (username && password) {
-                alert('Sign in functionality would be implemented here!');
+            // Check if all conditions are met
+            if (username && password && isOn) {
+                // Replace 'your-other-file.html' with the path to your HTML file
+                const htmlFilePath = 'NBaseSignIn.html'; // Change this to your actual file path
+                
+                // Load the HTML file in the iframe
+                popupFrame.src = htmlFilePath;
+                
+                // Show the popup
+                popupOverlay.style.display = 'flex';
             } else {
-                alert('Please fill in both username and password.');
+                let message = '';
+                if (!username || !password) {
+                    message = 'Please fill in both username and password.';
+                } else if (!isOn) {
+                    //pop up empty dashboard
+                    popupFrame.src = 'dashboard.html';
+                    popupOverlay.style.display = 'flex';
+                    return;
+                }
+                alert(message);
             }
         });
+
+        // Close popup functionality
+        closeButton.addEventListener('click', function() {
+            popupOverlay.style.display = 'none';
+            popupFrame.src = ''; // Clear the iframe source
+        });
+
+        // Close popup when clicking outside the popup container
+        popupOverlay.addEventListener('click', function(e) {
+            if (e.target === popupOverlay) {
+                popupOverlay.style.display = 'none';
+                popupFrame.src = ''; // Clear the iframe source
+            }
+        });
+
+        // Alternative method: Open in a new window instead of popup
+        function openInNewWindow(htmlFilePath) {
+            const newWindow = window.open(
+                htmlFilePath,
+                'Dashboard',
+                'width=800,height=600,scrollbars=yes,resizable=yes,toolbar=no,menubar=no'
+            );
+            
+            if (newWindow) {
+                newWindow.focus();
+            } else {
+                alert('Please allow popups for this site to view the dashboard.');
+            }
+        }
+
+      
     </script>
 </body>
 </html>
