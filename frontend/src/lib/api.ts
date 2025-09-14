@@ -10,7 +10,7 @@ export async function startRecording(seconds: number, output?: string) {
 }
 
 export async function extractCanvas(baseUrl: string, accessToken: string) {
-  const r = await fetch(`api/canvas/extract`, {
+  const r = await fetch(`/api/canvas/extract`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ baseUrl, accessToken })
@@ -21,8 +21,8 @@ export async function extractCanvas(baseUrl: string, accessToken: string) {
 }
 
 export async function authenticateDrive(opts: { signal?: AbortSignal } = {}) {
-  const r = await fetch(`api/authenticate_drive`, {
-    method: 'POST',
+  const r = await fetch(`/api/authenticate_drive`, {
+    method: 'GET',
     headers: { 'content-type': 'application/json' },
     signal: opts.signal,
   })
@@ -32,14 +32,14 @@ export async function authenticateDrive(opts: { signal?: AbortSignal } = {}) {
 }
 
 export async function migrateDrive(opts: { signal?: AbortSignal } = {}) {
-  const r = await fetch(`api/migrate`, {
+  const r = await fetch(`/api/migrate_files`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     signal: opts.signal,
   })
   const j = await r.json().catch(() => ({}))
-  if (!r.ok || j.ok === false) throw new Error(j.error || `http ${r.status}`)
-  return j // shape depends on your backend (e.g., {ok:true, count:...})
+  if (!r.ok) throw new Error(j.error || `http ${r.status}`)
+  return j as { count?: number } // Fixed: Added proper closing brace and return type
 }
 
 export async function listVault(path = '') {

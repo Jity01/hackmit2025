@@ -9,3 +9,5 @@ google-auth-oauthlib
 PyPDF2
 google-cloud-aiplatform
 requests
+pyobjc
+flask

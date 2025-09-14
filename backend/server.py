@@ -71,20 +71,43 @@ def canvas_extract():
     except Exception as e:
         return jsonify(ok=False, error=f"{e.__class__.__name__}: {e}"), 500
 
-@app.post("/authenticate_drive")
+@app.get("/authenticate_drive")
 def authenticate_drive():
+    global authenticated
     try:
         drive.authenticate()
+        authenticated = True
         return jsonify({"authenticated": True}), 200
-    except Exception as e:
-        return jsonify(error=f"unexpected: {e.__class__.__name__}: {e}"), 500
+    except:
+        return jsonify({"authenticated": False}), 500
 
-@app.post("/migrate")
-def migrate():
-    """migrates all google drive files into cloud storage"""
-    filestream_dicts = drive.get_all_files_with_paths()
-    cloud.migrate_files(filestream_dicts)
-    return jsonify(ok=False, error="not implemented"), 501
+@app.get("/drive_status")
+def drive_status():
+    """Return whether the user is authenticated"""
+    return jsonify({"authenticated": authenticated})
+
+@app.post("/migrate_files")
+def migrate_files():
+    global authenticated, migration_triggered
+    if not authenticated:
+        return jsonify({"error": "Not authenticated"}), 403
+    try:
+        migration_triggered = True  # mark migration started
+        files = drive.get_all_files_with_paths()
+        cloud.migrate_files(files)
+        return jsonify({"count": len(files)}), 200
+    except Exception as e:
+        migration_triggered = False
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.get("/migration_status")
+def migration_status():
+    return jsonify({
+        "authenticated": authenticated,
+        "migration_triggered": migration_triggered
+    }), 200
+
+
 
 @app.post('/vault/directory')
 def get_pwd():

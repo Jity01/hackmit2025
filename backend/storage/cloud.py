@@ -40,26 +40,59 @@ class CloudStorage:
         except Exception as e:
             print(f"Error creating folder: {e}")
             return False
-        
-    def upload_file(self, file_dict):
+
+    def upload_file(self, file_dict, user_prefix="user_files"):
         """
-        Uploads a file to GCS.
+        Uploads a file to GCS with a user-specific directory prefix.
 
         Args:
-            file_dict: a dictionary containing (filestream, name, mimeType, full_path, folder_path)
-            destination_path: Path in the bucket (e.g., "user_123/report.pdf")
+            file_dict: a dictionary containing (stream, name, mimeType, full_path, folder_path)
+            user_prefix: Directory prefix for user files (default: "user_files")
         """
-        folder_blob = self.bucket.blob(file_dict['folder_path'])
-        if not folder_blob:
-            self.create_folder()
-        blob = self.bucket.blob(file_dict['full_path'])
+        # Create the user-prefixed path
+        original_path = file_dict['full_path'].lstrip('/')  # Remove leading slash if present
+        user_path = f"{user_prefix}/{original_path}"
+
+        # Create the folder structure if needed
+        folder_path = f"{user_prefix}{file_dict['folder_path']}"
+        if folder_path and not folder_path.endswith('/'):
+            folder_path += '/'
+
+        # Check if folder exists, create if not
+        folder_blob = self.bucket.blob(folder_path)
+        if folder_path != f"{user_prefix}/" and not folder_blob.exists():
+            self.create_folder(folder_path)
+
+        # Upload the file to the user-prefixed path
+        blob = self.bucket.blob(user_path)
         stream, mime_type = file_dict['stream'], file_dict['mimeType']
+
+        # Reset stream position to beginning
+        stream.seek(0)
+
         blob.upload_from_file(stream, content_type=mime_type)
+
+        print(f"Uploaded file to: {user_path}")
         return True
-    
-    def migrate_files(self, file_dicts_with_paths):
+
+    def migrate_files(self, file_dicts_with_paths, user_prefix="user_files"):
+        """
+        Migrate files with a user-specific directory prefix.
+
+        Args:
+            file_dicts_with_paths: List of file dictionaries from Google Drive
+            user_prefix: Directory prefix for organizing user files
+        """
+        success_count = 0
         for file in file_dicts_with_paths:
-            self.upload_file(file)
+            try:
+                self.upload_file(file, user_prefix)
+                success_count += 1
+            except Exception as e:
+                print(f"Failed to upload {file.get('name', 'unknown')}: {e}")
+
+        print(f"Successfully migrated {success_count}/{len(file_dicts_with_paths)} files")
+        return success_count
 
 
     def download_file(self, file_path, file_name):
@@ -94,13 +127,13 @@ class CloudStorage:
                     relative_name = blob.name[len(current_path):]
                     files.append(relative_name)
         return {"files": files, "folders": folders}
-    
+
     def delete_file(self, file_path):
         """Deletes a file from GCS."""
         blob = self.bucket.blob(file_path)
         blob.delete()
         return True
-    
+
     def copy_file(self, source_path, destination_path):
         source_blob = self.bucket.blob(source_path)
         self.bucket.copy_blob(source_blob, self.bucket, destination_path)
@@ -166,4 +199,3 @@ if __name__ == "__main__":
     #     upload_file(f, "tf1.pdf")
     # print("Successfully uploaded file")
     # download_file("tf1.pdf", "test2.pdf")
-

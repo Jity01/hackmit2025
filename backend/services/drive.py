@@ -15,27 +15,22 @@ class GoogleDrive(DataSource):
             "application/vnd.google-apps.spreadsheet": "text/csv",
             "application/vnd.google-apps.presentation": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
         }
-        
-    # def _check_authentication(self):
-    #     if self.drive_service is None:
-    #         print("Please connect to the Google Drive first.")
-    #     return True
-    
+
+
     def authenticate(self):
         """
         Uses OAuth to connect to user's google drive.
         Returns the drive connection.
         """
-        load_dotenv()
-        GOOGLE_DRIVE_CREDENTIALS = os.getenv("GOOGLE_DRIVE_CREDENTIALS")
+        GOOGLE_DRIVE_CREDENTIALS = os.path.join(os.path.dirname(__file__), "../auth/drive_credentials.json")
         SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
         flow = InstalledAppFlow.from_client_secrets_file(
             GOOGLE_DRIVE_CREDENTIALS, SCOPES
         )
         creds = flow.run_local_server(port=0)
-        drive_service = build('drive', 'v3', credentials=creds)
-        return drive_service
-    
+        self.drive_service = build('drive', 'v3', credentials=creds)
+        return self.drive_service
+
     def get_all_files(self):
         """
         Loads all files from the user's google drive.
@@ -53,17 +48,16 @@ class GoogleDrive(DataSource):
                 pageToken=page_token
             ).execute()
 
-            
-            
+
+
             all_files.extend(response.get('files', []))
             page_token = response.get('nextPageToken')
-            
+
             if not page_token:
                 break
-        
         return all_files
-    
-    def get_files(self, name, page_size=1):
+
+    def get_files(self, keyword, page_size=1):
         """
         Searches for a file with specified name and type in the user's google drive.
         Returns a list of dictionaries containing id, name, and file type.
@@ -75,13 +69,13 @@ class GoogleDrive(DataSource):
             print("Please connect to the Google Drive first.")
             return
         results = self.drive_service.files().list(
-            q=f"name contains '{name}'",        
+            q=f"name contains '{keyword}'",
             pageSize=page_size,
             fields="files(id, name, mimeType)").execute()
 
         files = results.get('files', [])
         return files
-        
+
     def _load_file(self, file):
         """
         Loads a file from the user's google drive.
@@ -109,31 +103,31 @@ class GoogleDrive(DataSource):
 
     def get_all_files_with_paths(self, root_folder_id='root'):
         """
-        Returns all files with their paths. 
+        Returns all files with their paths.
         Sample output: [{id, name, mimeType, full_path, folder_path}, ...]
         """
 
         all_files_with_paths = []
-        
+
 
         folder_queue = [(root_folder_id, "")]
-        
+
         while folder_queue:
             current_folder_id, current_path = folder_queue.pop(0)
-            
+
             response = self.drive_service.files().list(
                 q=f"'{current_folder_id}' in parents and trashed=false", # grab all files with current directory as parent
                 pageSize=100,
                 fields="files(id, name, mimeType)"
             ).execute()
-            
+
             items = response.get('files', [])
-            
+
             # Process each item in this folder
             for item in items:
                 item_name = item['name']
                 item_full_path = f"{current_path}/{item_name}" if current_path else f"/{item_name}"
-                
+
                 if item['mimeType'] == 'application/vnd.google-apps.folder':
                     # It's a folder - add to queue for later processing
                     print(f"Found subfolder: {item_name}")
@@ -144,11 +138,9 @@ class GoogleDrive(DataSource):
                     file_with_path = {
                         **item,
                         'full_path': item_full_path,
-                        'folder_path': current_path if current_path else "/",
+                        'folder_path': current_path if current_path else "",
                     }
                     self._load_file(file_with_path)
                     all_files_with_paths.append(file_with_path)
-        
-        return all_files_with_paths
-    
 
+        return all_files_with_paths
